@@ -1,0 +1,52 @@
+﻿@using DynamicFormGenerator.Models
+@using MudBlazor
+
+<MudForm Model="formData" Validated="OnValidSubmit">
+    @foreach (var field in FormDefinition.Fields)
+    {
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField Label="@field.Label"
+                              @bind-Value="formData[field.Label]"
+                              Required="@field.Required"
+                              Validation="@(field.Required ? ValidateRequired : null)"
+                              FullWidth="true" />
+            </MudItem>
+        </MudGrid>
+    }
+    <MudButton OnClick="SubmitForm">Submit</MudButton>
+</MudForm>
+
+
+@code {
+    [Parameter] public FormConfig FormDefinition { get; set; } = new();
+
+    private Dictionary<string, object> formData = new();
+
+    protected override void OnInitialized()
+    {
+        // Initialize dictionary with default values
+        foreach (var field in FormDefinition.Fields)
+        {
+            formData[field.Label] = field.Type switch
+            {
+                "text" => "",
+                "email" => "",
+                "number" => 0,
+                "checkbox" => false,
+                "dropdown" => (field.Values?.FirstOrDefault() ?? ""),
+                _ => ""
+            };
+        }
+    }
+
+    private string ValidateRequired(string value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "This field is required." : null;
+    }
+
+    private void SubmitForm()
+    {
+        Console.WriteLine("Form Submitted: " + System.Text.Json.JsonSerializer.Serialize(formData));
+    }
+}

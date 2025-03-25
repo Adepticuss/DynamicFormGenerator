@@ -1,0 +1,27 @@
+﻿@using DynamicFormGenerator.Components
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudContainer>
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h4">Dynamic Form Generator</MudText>
+        <DynamicForm FormDefinition="formConfig" />
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private FormConfig formConfig = new()
+        {
+            Title = "Sample Form",
+            Fields = new List<FormField>
+        {
+            new() { Type = "text", Label = "Name", Required = true },
+            new() { Type = "email", Label = "Email", Required = true },
+            new() { Type = "number", Label = "Age", Min = 18, Max = 100 },
+            new() { Type = "dropdown", Label = "Industry", Values = new() { "Tech", "Production", "Health" }, Required = true },
+            new() { Type = "checkbox", Label = "Subscribe to Newsletter", Required = false }
+        }
+        };
+}

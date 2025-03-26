@@ -35,5 +35,7 @@ namespace DynamicFormGenerator.Models
 
         [JsonPropertyName("max")]
         public int? Max { get; set; }
+
+        public object Value { get; set; }
     }
 }

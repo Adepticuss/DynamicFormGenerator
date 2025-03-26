@@ -3,10 +3,11 @@
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
-<MudContainer>
-    <MudPaper Class="pa-4">
-        <MudText Typo="Typo.h4">Dynamic Form Generator</MudText>
+<MudContainer Class="app-container">
+    <MudPaper Class="form-wrapper">
+        <MudText Typo="Typo.h4" Class="form-title">Dynamic Form Generator</MudText>
         <DynamicForm FormDefinition="formConfig" />
     </MudPaper>
 </MudContainer>

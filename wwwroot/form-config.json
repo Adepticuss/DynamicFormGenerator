@@ -1,0 +1,32 @@
+{
+  "title": "Dynamic Sample Form",
+  "fields": [
+    {
+      "type": "text",
+      "label": "Name",
+      "required": true
+    },
+    {
+      "type": "email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "type": "number",
+      "label": "Age",
+      "min": 18,
+      "max": 100
+    },
+    {
+      "type": "dropdown",
+      "label": "Industry",
+      "values": [ "Tech", "Production", "Health" ],
+      "required": true
+    },
+    {
+      "type": "checkbox",
+      "label": "Subscribe to Newsletter",
+      "required": false
+    }
+  ]
+}

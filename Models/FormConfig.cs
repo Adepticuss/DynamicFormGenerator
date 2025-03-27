@@ -6,7 +6,7 @@ namespace DynamicFormGenerator.Models
     public class FormConfig
     {
         [JsonPropertyName("title")]
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } = "";
 
         [JsonPropertyName("fields")]
         //public List<FormField> Fields { get; set; } = new();

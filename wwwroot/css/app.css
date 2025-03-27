@@ -1,5 +1,10 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #2d2d2d;
+}
+
+#app {
+    background-color: #2d2d2d;
 }
 
 h1:focus {
@@ -159,4 +164,16 @@ code {
     font-weight: bold;
     text-transform: uppercase;
     border-radius: 8px;
+}
+
+@media (min-width: 1280px) {
+    .mud-container-maxwidth-lg {
+        max-width: 800px !important;
+    }
+}
+
+@media (min-width: 600px) {
+    .mud-container-maxwidth-lg {
+        max-width: 800px !important;
+    }
 }

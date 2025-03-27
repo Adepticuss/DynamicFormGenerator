@@ -2,9 +2,12 @@
 @using MudBlazor
 @using System.Text.Json
 @using System.ComponentModel.DataAnnotations
+@using System.Text
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
-<MudForm Model="formData" Validated="OnValidSubmit">
+@* <MudForm Model="formData" Validated="OnValidSubmit"> *@
+<MudForm Model="formData" @ref="mudForm">
     @foreach (var field in FormDefinition.Fields)
     {
         <MudGrid Justify="Justify.Center">
@@ -14,48 +17,29 @@
                     case "text":
                     case "email":
                         <MudTextField T="string"
-                                      Label="@field.Label"
-                                      Value="GetTextValue(field.Label)"
-                                      ValueChanged="(string value) => UpdateTextField(field.Label, value)"
-                                      Required="@field.Required"
-                                      Validation="@(CreateValidationFunc(field))"
-                                      FullWidth="true" />
+                        Label="@field.Label"
+                        Value="GetTextValue(field.Label)"
+                        ValueChanged="(string value) => UpdateTextField(field.Label, value)"
+                        Required="@field.Required"
+                        Validation="@(CreateValidationFunc(field))"
+                        FullWidth="true" />
                         break;
                     case "number":
-                        @* <MudNumericField T="int?"
-                                         Label="@field.Label"
-                                         Value="(int?)formData[field.Label]"
-                                         ValueChanged="@((int? value) => UpdateNumberField(field.Label, value))"
-                                         Required="@field.Required"
-                                         Validation="@(CreateNumberValidationFunc(field))"
-                                         FullWidth="true" /> *@
-                        @* <MudNumericField T="int?"
-                                         Label="@field.Label"
-                                         Value="GetNumberValue(field.Label)"
-                                         ValueChanged="(int? value) => UpdateNumberField(field.Label, value)"
-                                         Required="@field.Required"
-                                         FullWidth="true" /> *@
-                        @* <MudNumericField T="int?"
-                                         Label="@field.Label"
-                                         Value="GetNumberValue(field.Label)"
-                                         ValueChanged="(int? value) => ValidateAndUpdateNumberField(field.Label, value)"
-                                         Required="@field.Required"
-                                         FullWidth="true" /> *@
                         <MudNumericField T="int?"
-                                         Label="@field.Label"
-                                         Value="GetNumberValue(field.Label)"
-                                         ValueChanged="(int? value) => ValidateAndUpdateNumberField(field.Label, value)"
-                                         Required="@field.Required"
-                                         Validation="@(CreateNumberValidationFunc(field))"
-                                         FullWidth="true" />
+                        Label="@field.Label"
+                        Value="GetNumberValue(field.Label)"
+                        ValueChanged="(int? value) => ValidateAndUpdateNumberField(field.Label, value)"
+                        Required="@field.Required"
+                        Validation="@(CreateNumberValidationFunc(field))"
+                        FullWidth="true" />
                         break;
                     case "dropdown":
                         <MudSelect T="string"
-                                   Label="@field.Label"
-                                   Value="(string)formData[field.Label]"
-                                   ValueChanged="@((string value) => UpdateDropdownField(field.Label, value))"
-                                   Required="@field.Required"
-                                   FullWidth="true">
+                        Label="@field.Label"
+                        Value="(string)formData[field.Label]"
+                        ValueChanged="@((string value) => UpdateDropdownField(field.Label, value))"
+                        Required="@field.Required"
+                        FullWidth="true">
                             @foreach (var option in field.Values ?? Enumerable.Empty<string>())
                             {
                                 <MudSelectItem Value="@option">@option</MudSelectItem>
@@ -64,36 +48,31 @@
                         break;
                     case "checkbox":
                         <MudCheckBox T="bool"
-                                     Label="@field.Label"
-                                     Checked="GetCheckboxValue(field.Label)"
-                                     CheckedChanged="(bool value) => UpdateCheckboxField(field.Label, value)"
-                                     Required="@field.Required" />
+                        Label="@field.Label"
+                        Checked="GetCheckboxValue(field.Label)"
+                        CheckedChanged="(bool value) => UpdateCheckboxField(field.Label, value)"
+                        Required="@field.Required" />
                         break;
                 }
             </MudItem>
         </MudGrid>
     }
-    @* <MudButton Color="Color.Primary"
-    Variant="Variant.Filled"
-    OnClick="SubmitForm"
-    FullWidth="true"
-    Class="custom-button">
-        Submit
-    </MudButton> *@
     <MudStack Class="custom-button-container">
         <MudButton Color="Color.Primary"
-                   Variant="Variant.Filled"
-                   OnClick="SubmitForm"
-                   FullWidth="true"
-                   Class="custom-button">
+        Variant="Variant.Filled"
+        OnClick="SubmitForm"
+        FullWidth="true"
+        Class="custom-button">
             Submit
         </MudButton>
     </MudStack>
 </MudForm>
 
 @code {
+    private MudForm mudForm; // Reference to MudForm
     [Parameter] public FormConfig FormDefinition { get; set; } = new();
     private Dictionary<string, object> formData = new();
+    [Inject] IJSRuntime JS { get; set; }
 
     protected override void OnInitialized()
     {
@@ -208,14 +187,12 @@
         return formData.TryGetValue(label, out var value) && value is int intValue ? intValue : (int?)null;
     }
 
-    private void SubmitForm()
+    private async Task SubmitForm()
     {
-        // Validate all fields before submission
-        bool isValid = ValidateForm();
+        await mudForm.Validate(); // Trigger validation
 
-        if (isValid)
+        if (mudForm.IsValid) // Check if form is valid
         {
-            // Create a new dictionary with converted values
             var submissionData = new Dictionary<string, object>();
 
             foreach (var kvp in formData)
@@ -227,12 +204,31 @@
                     null => null,
                     _ => kvp.Value?.ToString() ?? ""
                 };
-
                 submissionData[kvp.Key] = convertedValue;
             }
 
-            Console.WriteLine("Form Submitted: " + JsonSerializer.Serialize(submissionData));
-            // You might want to add additional logic here, like raising an event
+            string jsonString = JsonSerializer.Serialize(submissionData, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+            string formattedMessage = $"Form Submitted:<br><br>{string.Join("<br>", jsonString.Split(Environment.NewLine))}";
+
+            Snackbar.Add((MarkupString)formattedMessage, Severity.Success, config =>
+            {
+                config.CloseAfterNavigation = false;
+                config.VisibleStateDuration = 6000;
+            });
+
+            await JS.InvokeVoidAsync("console.log", $"Form Submitted:\n{jsonString}");
+
+            byte[] fileBytes = Encoding.UTF8.GetBytes(jsonString);
+            using var streamRef = new DotNetStreamReference(new MemoryStream(fileBytes));
+            await JS.InvokeVoidAsync("downloadFile", "FormData.json", streamRef);
+        }
+        else
+        {
+            Snackbar.Add("Form validation failed. Please check required fields.", Severity.Error);
         }
     }
 

@@ -15,6 +15,7 @@ builder.Services.AddScoped(sp => new JsonSerializerOptions
     PropertyNameCaseInsensitive = true
 });
 
+// Adding MudServices
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

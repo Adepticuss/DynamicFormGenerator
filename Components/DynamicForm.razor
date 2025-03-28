@@ -6,8 +6,8 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-@* <MudForm Model="formData" Validated="OnValidSubmit"> *@
-<MudForm Model="formData" @ref="mudForm">
+@* Creating dynamic Mud From *@
+<MudForm Model="formData" @ref="mudForm" name="myForm">
     @foreach (var field in FormDefinition.Fields)
     {
         <MudGrid Justify="Justify.Center">
@@ -17,29 +17,35 @@
                     case "text":
                     case "email":
                         <MudTextField T="string"
-                        Label="@field.Label"
-                        Value="GetTextValue(field.Label)"
-                        ValueChanged="(string value) => UpdateTextField(field.Label, value)"
-                        Required="@field.Required"
-                        Validation="@(CreateValidationFunc(field))"
-                        FullWidth="true" />
+                                      Label="@field.Label"
+                                      Id="@($"field_{field.Label}")"
+                                      Name="@($"field_{field.Label}")"
+                                      Value="GetTextValue(field.Label)"
+                                      ValueChanged="(string value) => UpdateTextField(field.Label, value)"
+                                      Required="@field.Required"
+                                      Validation="@(CreateValidationFunc(field))"
+                                      FullWidth="true" />
                         break;
                     case "number":
                         <MudNumericField T="int?"
-                        Label="@field.Label"
-                        Value="GetNumberValue(field.Label)"
-                        ValueChanged="(int? value) => ValidateAndUpdateNumberField(field.Label, value)"
-                        Required="@field.Required"
-                        Validation="@(CreateNumberValidationFunc(field))"
-                        FullWidth="true" />
+                                         Label="@field.Label"
+                                         Id="@($"field_{field.Label}")"
+                                         Name="@($"field_{field.Label}")"
+                                         Value="GetNumberValue(field.Label)"
+                                         ValueChanged="(int? value) => ValidateAndUpdateNumberField(field.Label, value)"
+                                         Required="@field.Required"
+                                         Validation="@(CreateNumberValidationFunc(field))"
+                                         FullWidth="true" />
                         break;
                     case "dropdown":
                         <MudSelect T="string"
-                        Label="@field.Label"
-                        Value="(string)formData[field.Label]"
-                        ValueChanged="@((string value) => UpdateDropdownField(field.Label, value))"
-                        Required="@field.Required"
-                        FullWidth="true">
+                                   Label="@field.Label"
+                                   Id="@($"field_{field.Label}")"
+                                   Name="@($"field_{field.Label}")"
+                                   Value="@(formData[field.Label] as string ?? string.Empty)"
+                                   ValueChanged="@((string value) => UpdateDropdownField(field.Label, value))"
+                                   Required="@field.Required"
+                                   FullWidth="true">
                             @foreach (var option in field.Values ?? Enumerable.Empty<string>())
                             {
                                 <MudSelectItem Value="@option">@option</MudSelectItem>
@@ -48,42 +54,44 @@
                         break;
                     case "checkbox":
                         <MudCheckBox T="bool"
-                        Label="@field.Label"
-                        Checked="GetCheckboxValue(field.Label)"
-                        CheckedChanged="(bool value) => UpdateCheckboxField(field.Label, value)"
-                        Required="@field.Required" />
+                                     Label="@field.Label"
+                                     Id="@($"field_{field.Label}")"
+                                     Checked="GetCheckboxValue(field.Label)"
+                                     CheckedChanged="(bool value) => UpdateCheckboxField(field.Label, value)"
+                                     Required="@field.Required" />
                         break;
                 }
             </MudItem>
         </MudGrid>
     }
+
     <MudStack Class="custom-button-container">
         <MudButton Color="Color.Primary"
-        Variant="Variant.Filled"
-        OnClick="SubmitForm"
-        FullWidth="true"
-        Class="custom-button">
+                   Variant="Variant.Filled"
+                   OnClick="SubmitForm"
+                   FullWidth="true"
+                   Class="custom-button">
             Submit
         </MudButton>
     </MudStack>
 </MudForm>
 
 @code {
-    private MudForm mudForm; // Reference to MudForm
+    private MudForm? mudForm;
     [Parameter] public FormConfig FormDefinition { get; set; } = new();
-    private Dictionary<string, object> formData = new();
-    [Inject] IJSRuntime JS { get; set; }
+    private Dictionary<string, object?> formData = new();
+    [Inject] IJSRuntime? JS { get; set; }
 
     protected override void OnInitialized()
     {
         // Initialize dictionary with default values
-        foreach (var field in FormDefinition.Fields)
+        foreach (var field in FormDefinition.Fields!)
         {
-            formData[field.Label] = field.Type switch
+            formData[field.Label!] = field.Type! switch
             {
                 "text" => "",
                 "email" => "",
-                "number" => null,
+                "number" => (object?)null,
                 "checkbox" => false,
                 "dropdown" => (field.Values?.FirstOrDefault() ?? ""),
                 _ => ""
@@ -91,7 +99,10 @@
         }
     }
 
-    private Func<string, string> CreateValidationFunc(dynamic field)
+    #region Validation Functions
+
+    // Create validation for text and email fields 
+    private Func<string, string?> CreateValidationFunc(dynamic field)
     {
         return value =>
         {
@@ -117,7 +128,8 @@
         };
     }
 
-    private Func<int?, string> CreateNumberValidationFunc(dynamic field)
+    // Validation for number fields
+    private Func<int?, string?> CreateNumberValidationFunc(dynamic field)
     {
         return value =>
         {
@@ -136,19 +148,13 @@
             if (field.Max != null && value > field.Max)
                 return $"Value must be at most {field.Max}.";
 
-            return null; // No errors
+            return null;
         };
     }
 
-    private void UpdateNumberField(string label, int? value)
-    {
-        formData[label] = value;
-    }
+    #endregion
 
-    private void UpdateDropdownField(string label, string value)
-    {
-        formData[label] = value;
-    }
+    #region Data Handling Methods
 
     private string GetTextValue(string label)
     {
@@ -156,6 +162,28 @@
     }
 
     private void UpdateTextField(string label, string value)
+    {
+        formData[label] = value;
+    }
+
+    private int? GetNumberValue(string label)
+    {
+        return formData.TryGetValue(label, out var value) && value is int intValue ? intValue : (int?)null;
+    }
+
+    private void ValidateAndUpdateNumberField(string label, int? value)
+    {
+        if (value == null)
+        {
+            formData[label] = null;
+        }
+        else
+        {
+            formData[label] = value;
+        }
+    }
+
+    private void UpdateDropdownField(string label, string value)
     {
         formData[label] = value;
     }
@@ -170,25 +198,15 @@
         formData[label] = value;
     }
 
-    private void ValidateAndUpdateNumberField(string label, int? value)
-    {
-        if (value == null)
-        {
-            formData[label] = null; // Clear field if input is invalid
-        }
-        else
-        {
-            formData[label] = value; // Keep valid input
-        }
-    }
+    #endregion
 
-    private int? GetNumberValue(string label)
-    {
-        return formData.TryGetValue(label, out var value) && value is int intValue ? intValue : (int?)null;
-    }
+    #region Form Submission
 
+    // Handle form submission
     private async Task SubmitForm()
     {
+        if (mudForm is null) return; // Ensure mudForm is initialized
+
         await mudForm.Validate(); // Trigger validation
 
         if (mudForm.IsValid) // Check if form is valid
@@ -201,7 +219,7 @@
                 {
                     bool boolValue => boolValue,
                     int intValue => intValue,
-                    null => null,
+                    null => "",
                     _ => kvp.Value?.ToString() ?? ""
                 };
                 submissionData[kvp.Key] = convertedValue;
@@ -212,6 +230,7 @@
                     WriteIndented = true
                 });
 
+            // Formatting message to follow JSON format for Snackbar 
             string formattedMessage = $"Form Submitted:<br><br>{string.Join("<br>", jsonString.Split(Environment.NewLine))}";
 
             Snackbar.Add((MarkupString)formattedMessage, Severity.Success, config =>
@@ -220,11 +239,18 @@
                 config.VisibleStateDuration = 6000;
             });
 
-            await JS.InvokeVoidAsync("console.log", $"Form Submitted:\n{jsonString}");
+            if (JS != null)
+            {
+                await JS.InvokeVoidAsync("console.log", $"Form Submitted:\n{jsonString}");
+            }
 
             byte[] fileBytes = Encoding.UTF8.GetBytes(jsonString);
             using var streamRef = new DotNetStreamReference(new MemoryStream(fileBytes));
-            await JS.InvokeVoidAsync("downloadFile", "FormData.json", streamRef);
+
+            if (JS != null)
+            {
+                await JS.InvokeVoidAsync("downloadFile", "FormData.json", streamRef);
+            }
         }
         else
         {
@@ -232,35 +258,5 @@
         }
     }
 
-    private bool ValidateForm()
-    {
-        bool isValid = true;
-        foreach (var field in FormDefinition.Fields)
-        {
-            object value;
-            if (!formData.TryGetValue(field.Label, out value))
-            {
-                isValid = false;
-                continue;
-            }
-
-            switch (field.Type)
-            {
-                case "text":
-                case "email":
-                    isValid &= !field.Required || !string.IsNullOrWhiteSpace((string)value);
-                    break;
-                case "number":
-                    isValid &= !field.Required || value != null;
-                    break;
-                case "checkbox":
-                    // No special validation needed for checkbox
-                    break;
-                case "dropdown":
-                    isValid &= !field.Required || !string.IsNullOrWhiteSpace((string)value);
-                    break;
-            }
-        }
-        return isValid;
-    }
+    #endregion
 }

@@ -1,21 +1,9 @@
-﻿//namespace DynamicFormGenerator.Models
-//{
-//    // Class to represent the form structure from the JSON configuration
-//    public class FormField
-//    {
-//        public string Type { get; set; } = string.Empty;
-//        public string Label { get; set; } = string.Empty;
-//        public bool Required { get; set; }
-//        public int? Min { get; set; }
-//        public int? Max { get; set; }
-//        public List<string>? Values { get; set; }
-//    }
-//}
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
 namespace DynamicFormGenerator.Models
 {
+    // Represents an individual field in the form
     public class FormField
     {
         [JsonPropertyName("type")]
@@ -36,6 +24,6 @@ namespace DynamicFormGenerator.Models
         [JsonPropertyName("max")]
         public int? Max { get; set; }
 
-        public object Value { get; set; }
+        public object? Value { get; set; }
     }
 }

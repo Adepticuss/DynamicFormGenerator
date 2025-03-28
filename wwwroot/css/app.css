@@ -118,6 +118,7 @@ code {
     text-align: start;
 }
 
+/*Custom styling form some elements*/
 .app-container {
     min-height: 100vh;
     display: flex;
@@ -141,7 +142,6 @@ code {
     margin-top: 30px;
 }
 
-
 .form-title {
     margin-bottom: 16px;
     font-weight: bold;
@@ -155,7 +155,6 @@ code {
     width: 100%;
 }
 
-/* MudButton custom styling */
 .custom-button {
     max-width: 300px;
     width: 100%; 

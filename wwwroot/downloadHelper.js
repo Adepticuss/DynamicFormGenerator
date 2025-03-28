@@ -1,4 +1,5 @@
-﻿window.downloadFile = async (fileName, contentStreamReference) => {
+﻿// JavaScript file to help Download ready JSON file on form Submit
+window.downloadFile = async (fileName, contentStreamReference) => {
     const arrayBuffer = await contentStreamReference.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: "application/json" });
 
